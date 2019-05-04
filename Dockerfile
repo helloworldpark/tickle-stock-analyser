@@ -1,6 +1,6 @@
 # 1. Install golang
 FROM golang:latest
-MAINTAINER helloworld.park@gmail.com
+LABEL email="helloworld.park@gmail.com" 
 
 # 2. Download code
 RUN cd ./src
