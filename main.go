@@ -4,6 +4,8 @@ import "fmt"
 import "github.com/helloworldpark/tickle-stock-watcher/structs"
 
 func main() {
+	obj := ReadAnalysisObjective("/Users/shp/Documents/projects/tickle-stock-analyser/analysisObjective.json")
+	fmt.Println(obj)
 	InitDB("/Users/shp/Documents/projects/tickle-stock-watcher/credee.json")
 	defer CloseDB()
 	// 주식 종목들을 모아놓는다
