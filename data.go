@@ -1,8 +1,12 @@
 package main
 
 import (
+	"time"
+
+	"github.com/helloworldpark/tickle-stock-watcher/commons"
 	"github.com/helloworldpark/tickle-stock-watcher/database"
 	"github.com/helloworldpark/tickle-stock-watcher/structs"
+	"github.com/helloworldpark/tickle-stock-watcher/watcher"
 )
 
 var dbClient *database.DBClient
@@ -19,6 +23,11 @@ func InitDB(credPath string) {
 
 func CloseDB() {
 	dbClient.Close()
+}
+
+func CreateWatcher() *watcher.Watcher {
+	crawler := watcher.New(dbClient, 1*time.Second)
+	return crawler
 }
 
 func GetStocks(markets []string) []structs.Stock {
@@ -40,4 +49,14 @@ func GetStocks(markets []string) []structs.Stock {
 		}
 	}
 	return result
+}
+
+func GetPrice(stockid string) (result []structs.StockPrice, needCrawler bool) {
+	dbClient.Select(&result, "where StockID=? order by Timestamp", stockid)
+	year := commons.Now().Year()
+	if len(result) == 0 || result[0].Timestamp > watcher.GetCollectionStartingDate(year-2).Unix() {
+		result = nil
+		needCrawler = true
+	}
+	return result, needCrawler
 }
