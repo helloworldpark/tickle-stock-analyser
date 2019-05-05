@@ -1,10 +1,11 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"math"
-	"time"
 
 	"github.com/helloworldpark/tickle-stock-watcher/analyser"
 	"github.com/helloworldpark/tickle-stock-watcher/logger"
@@ -55,7 +56,7 @@ func ReadAnalysisObjective(filePath string) AnalysisObjective {
 	return obj
 }
 
-func GetAnalyser(stockid string, strategies [][2]string, callback func(currentTime time.Time, price float64, stockid string, orderSide int)) *analyser.Analyser {
+func GetAnalyser(stockid string, strategies [][2]string, callback func(price structs.StockPrice, orderSide int)) *analyser.Analyser {
 	a := analyser.NewAnalyser(stockid)
 	for i := range strategies {
 		for j := range strategies[i] {
@@ -64,8 +65,8 @@ func GetAnalyser(stockid string, strategies [][2]string, callback func(currentTi
 				Strategy:  strategies[i][j],
 				OrderSide: j,
 			}
-			f := func(currentTime time.Time, price float64, stockid string, orderSide int, userid int64, repeat bool) {
-				callback(currentTime, price, stockid, orderSide)
+			f := func(price structs.StockPrice, orderSide int, userid int64, repeat bool) {
+				callback(price, orderSide)
 			}
 			a.AppendStrategy(userStock, f)
 		}
@@ -88,24 +89,46 @@ func NewSubReport(stock structs.Stock, trades []Trade) AnalysisSubReport {
 	pSm, pSv := simpleMeanVar(nums)
 	subReport.ProfitMean = pSm - 1.0
 	subReport.ProfitVar = pSv
-	subReport.ProfitLogMean = pLm
-	subReport.ProfitLogVar = pLv
+	subReport.ProfitLogMean = math.Expm1(pLm)
+	subReport.ProfitLogVar = math.Exp(pLv)
 
 	for i := range nums {
-		nums[i] = float64(trades[i].Sell.Timestamp) / float64(trades[i].Buy.Timestamp)
+		nums[i] = float64(trades[i].Sell.Timestamp) - float64(trades[i].Buy.Timestamp)
+		nums[i] /= (60 * 60 * 24)
 	}
 	lLm, lLv := logMeanVar(nums)
 	lSm, lSv := simpleMeanVar(nums)
 	subReport.LagMean = lSm
 	subReport.LagVar = lSv
-	subReport.LagLogMean = lLm
-	subReport.LagLogVar = lLv
+	subReport.LagLogMean = math.Exp(lLm)
+	subReport.LagLogVar = math.Exp(lLv)
 
 	return subReport
 }
 
+func (sr AnalysisSubReport) String() string {
+	bf := bytes.Buffer{}
+	bf.WriteString("Name: ")
+	bf.WriteString(sr.Stock.Name)
+	bf.WriteString("(")
+	bf.WriteString(sr.Stock.StockID)
+	bf.WriteString(")\n")
+	bf.WriteString(fmt.Sprintf("Trades: %d\n", sr.Count))
+	bf.WriteString(fmt.Sprintf("Total Profit: %.2f%%\n", sr.ProfitMean*float64(sr.Count)*100))
+	bf.WriteString(fmt.Sprintf("Profit Mean: %.2f%%\n", sr.ProfitMean*100))
+	bf.WriteString(fmt.Sprintf("Profit Stdev: %.2f%%\n", sr.ProfitVar*100))
+	bf.WriteString(fmt.Sprintf("Profit Log Mean: %.2f%%\n", sr.ProfitLogMean*100))
+	bf.WriteString(fmt.Sprintf("Profit Log Stdev: %.2f%%\n", sr.ProfitLogVar*100))
+	bf.WriteString(fmt.Sprintf("Lag Mean: %.2f days\n", sr.LagMean))
+	bf.WriteString(fmt.Sprintf("Lag Stdev: %.2f days\n", sr.LagVar))
+	bf.WriteString(fmt.Sprintf("Lag Log Mean: %.2f days\n", sr.LagLogMean))
+	bf.WriteString(fmt.Sprintf("Lag Log Stdev: %.2f days\n", sr.LagLogVar))
+
+	return bf.String()
+}
+
 func simpleMeanVar(arr []float64) (m, v float64) {
-	return stat.MeanVariance(arr, nil)
+	return stat.MeanStdDev(arr, nil)
 }
 
 func logMeanVar(arr []float64) (m, v float64) {
@@ -113,5 +136,5 @@ func logMeanVar(arr []float64) (m, v float64) {
 	for i := range tmp {
 		tmp[i] = math.Log(arr[i])
 	}
-	return stat.MeanVariance(tmp, nil)
+	return stat.MeanStdDev(tmp, nil)
 }

@@ -3,11 +3,17 @@ package main
 import (
 	"fmt"
 	"sync"
-	"time"
 
 	"github.com/helloworldpark/tickle-stock-watcher/watcher"
 
 	"github.com/helloworldpark/tickle-stock-watcher/structs"
+)
+
+const (
+	maxCrawlingStocks = 16
+	INVALID           = -1
+	BUY               = 0
+	SELL              = 1
 )
 
 func main() {
@@ -16,7 +22,8 @@ func main() {
 	InitDB("/Users/shp/Documents/projects/tickle-stock-watcher/credee.json")
 	defer CloseDB()
 	// 주식 종목들을 모아놓는다
-	stocks := GetStocks(objective.Markets)
+	// stocks := GetStocks(objective.Markets)
+	stocks := TestStocks()
 	// 전략들을 파싱하여 Rule로 만들어놓는다
 
 	// Goroutine 시작
@@ -29,7 +36,6 @@ func main() {
 	// 이벤트를 기록한다
 	subReports := make(chan AnalysisSubReport)
 	semaphore := sync.WaitGroup{}
-	maxCrawlingStocks := 16
 	var crawler *watcher.Watcher
 	var crawled []structs.Stock
 	simulate := func(stock structs.Stock, prices []structs.StockPrice) {
@@ -37,8 +43,8 @@ func main() {
 		subReports <- Simulate(stock, objective.Rules, prices)
 	}
 
+	// 모든 데이터를 소진했으면, 이벤트를 기록한다
 	go func() {
-		// 모든 데이터를 소진했으면, 이벤트를 기록한다
 		for sub := range subReports {
 			fmt.Println("222222: ", sub)
 		}
@@ -59,7 +65,7 @@ func main() {
 			go simulate(stock, prices)
 		}
 
-		if stockIdx%maxCrawlingStocks == (maxCrawlingStocks-1) || stockIdx == len(stocks)-1 {
+		if len(crawled) > 0 && (stockIdx%maxCrawlingStocks == (maxCrawlingStocks-1) || stockIdx == len(stocks)-1) {
 			crawler.Collect()
 			semaphore.Add(len(crawled))
 			for _, crawledStock := range crawled {
@@ -72,9 +78,8 @@ func main() {
 			}
 		}
 	}
-
+	// 시뮬레이션이 끝나길 기다렸다가, 다 끝나면 보고서를 작성한다
 	semaphore.Wait()
-	fmt.Println("Will Close SubReports")
 	close(subReports)
 
 	// 기록된 이벤트를 Google Cloud Storage에 저장한다
@@ -83,11 +88,24 @@ func main() {
 	// 모든 종목에 대해 종료되었으면, 이 서버를 삭제하는 API를 날리고 종료한다
 }
 
+func TestStocks() []structs.Stock {
+	return []structs.Stock{
+		structs.Stock{Name: "대현", StockID: "016090", MarketType: "kospi"},
+		structs.Stock{Name: "대한항공", StockID: "003490", MarketType: "kospi"},
+		structs.Stock{Name: "한미사이언스", StockID: "008930", MarketType: "kospi"},
+		structs.Stock{Name: "삼성물산", StockID: "028260", MarketType: "kospi"},
+		structs.Stock{Name: "한화케미칼", StockID: "009830", MarketType: "kospi"},
+		structs.Stock{Name: "동서", StockID: "026960", MarketType: "kospi"},
+		structs.Stock{Name: "CJ CGV", StockID: "079160", MarketType: "kospi"},
+	}
+}
+
 func Simulate(stock structs.Stock, strategies [][2]string, prices []structs.StockPrice) AnalysisSubReport {
-	lastSide := -1
-	callback := func(currentTime time.Time, price float64, stockid string, orderSide int) {
-		if lastSide == -1 {
-			if orderSide == 1 {
+	lastSide := INVALID
+	trades := make([]Trade, 0)
+	callback := func(price structs.StockPrice, orderSide int) {
+		if lastSide == INVALID {
+			if orderSide == SELL {
 				return
 			}
 			lastSide = orderSide
@@ -95,15 +113,26 @@ func Simulate(stock structs.Stock, strategies [][2]string, prices []structs.Stoc
 			if lastSide == orderSide {
 				return
 			}
+			lastSide = orderSide
 		}
-
+		if lastSide == BUY {
+			trade := Trade{}
+			trade.Buy = price
+			trades = append(trades, trade)
+		} else if lastSide == SELL {
+			trade := trades[len(trades)-1]
+			trade.Sell = price
+			trades[len(trades)-1] = trade
+		}
 	}
 	ana := GetAnalyser(stock.StockID, strategies, callback)
 	for i := range prices {
-		price := prices[i]
-		ana.AppendPastStockPrice(price)
+		ana.AppendPastStockPrice(prices[i])
 		ana.CalculateStrategies()
 	}
+	if lastSide == BUY && len(trades) > 0 {
+		trades = trades[:len(trades)-1]
+	}
 
-	return NewSubReport(stock, nil)
+	return NewSubReport(stock, trades)
 }
