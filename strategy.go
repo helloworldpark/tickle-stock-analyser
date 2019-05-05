@@ -25,6 +25,7 @@ type Trade struct {
 
 type AnalysisSubReport struct {
 	Stock         structs.Stock `json:"stock"`
+	Strategy      string        `json:"strategy"`
 	Trades        []Trade       `json:"trades"`
 	Count         int           `json:"count"`
 	ProfitMean    float64       `json:"profit_mean"`
@@ -56,26 +57,35 @@ func ReadAnalysisObjective(filePath string) AnalysisObjective {
 	return obj
 }
 
-func GetAnalyser(stockid string, strategies [][2]string, callback func(price structs.StockPrice, orderSide int)) *analyser.Analyser {
+type StrategyCallback struct {
+	strategy string
+	callback func(price structs.StockPrice, orderSide int)
+}
+
+func GetAnalyser(stockid string) *analyser.Analyser {
 	a := analyser.NewAnalyser(stockid)
-	for i := range strategies {
-		for j := range strategies[i] {
-			userStock := structs.UserStock{
-				StockID:   stockid,
-				Strategy:  strategies[i][j],
-				OrderSide: j,
-			}
-			f := func(price structs.StockPrice, orderSide int, userid int64, repeat bool) {
-				callback(price, orderSide)
-			}
-			a.AppendStrategy(userStock, f)
-		}
-	}
 	return a
 }
 
-func NewSubReport(stock structs.Stock, trades []Trade) AnalysisSubReport {
-	subReport := AnalysisSubReport{Stock: stock, Trades: trades, Count: len(trades)}
+func UpdateStrategy(a *analyser.Analyser, stockid string, strategies [2]StrategyCallback) {
+	for j := range strategies {
+		userStock := structs.UserStock{
+			StockID:   stockid,
+			Strategy:  strategies[j].strategy,
+			OrderSide: j,
+		}
+		f := func(c func(structs.StockPrice, int)) func(structs.StockPrice, int, int64, bool) {
+			return func(price structs.StockPrice, orderSide int, _ int64, _ bool) {
+				c(price, orderSide)
+			}
+		}
+		callback := strategies[j].callback
+		a.AppendStrategy(userStock, f(callback))
+	}
+}
+
+func NewSubReport(stock structs.Stock, strategy string, trades []Trade) AnalysisSubReport {
+	subReport := AnalysisSubReport{Stock: stock, Trades: trades, Strategy: strategy, Count: len(trades)}
 	if len(trades) == 0 {
 		return subReport
 	}
@@ -113,6 +123,7 @@ func (sr AnalysisSubReport) String() string {
 	bf.WriteString("(")
 	bf.WriteString(sr.Stock.StockID)
 	bf.WriteString(")\n")
+	bf.WriteString(fmt.Sprintf("Strategy: %s\n", sr.Strategy))
 	bf.WriteString(fmt.Sprintf("Trades: %d\n", sr.Count))
 	bf.WriteString(fmt.Sprintf("Total Profit: %.2f%%\n", sr.ProfitMean*float64(sr.Count)*100))
 	bf.WriteString(fmt.Sprintf("Profit Mean: %.2f%%\n", sr.ProfitMean*100))
