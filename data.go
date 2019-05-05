@@ -18,6 +18,8 @@ func InitDB(credPath string) {
 	dbClient.Open()
 	dbClient.RegisterStructFromRegisterables([]database.DBRegisterable{
 		structs.Stock{},
+		structs.WatchingStock{},
+		structs.StockPrice{},
 	})
 }
 

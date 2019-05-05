@@ -56,6 +56,8 @@ github.com/helloworldpark/tickle-stock-watcher v0.0.0-20190505020851-497984acd0a
 github.com/helloworldpark/tickle-stock-watcher v0.0.0-20190505020851-497984acd0a9/go.mod h1:J9MtGx01yn5eHBmkZVUADbpioLiULJkWWBLA7EuxfM8=
 github.com/helloworldpark/tickle-stock-watcher v0.0.0-20190505024500-f0348ec159f2 h1:DE8H/VNg3pvCGS4lZSZnKtlNcy/b2eosM9zvCmYLniw=
 github.com/helloworldpark/tickle-stock-watcher v0.0.0-20190505024500-f0348ec159f2/go.mod h1:J9MtGx01yn5eHBmkZVUADbpioLiULJkWWBLA7EuxfM8=
+github.com/helloworldpark/tickle-stock-watcher v0.0.0-20190505045725-8c475f02a570 h1:CJdS1RUwgZetuV+jbtHrLE0FgtOVkignpF9QHifo4WY=
+github.com/helloworldpark/tickle-stock-watcher v0.0.0-20190505045725-8c475f02a570/go.mod h1:J9MtGx01yn5eHBmkZVUADbpioLiULJkWWBLA7EuxfM8=
 github.com/hpcloud/tail v1.0.0 h1:nfCOvKYfkgYP8hkirhJocXT2+zOD8yUNjXaWfTlyFKI=
 github.com/hpcloud/tail v1.0.0/go.mod h1:ab1qPbhIpdTxEkNHXyeSf5vhxWSCs/tWer42PpOxQnU=
 github.com/julienschmidt/httprouter v1.2.0/go.mod h1:SYymIcj16QtmaHHD7aYtjjsJG7VTCxuUUipMqKk8s4w=
