@@ -61,6 +61,16 @@ github.com/helloworldpark/govaluate v0.0.0-20190409082332-bde2f2afa732 h1:RZ8UQw
 github.com/helloworldpark/govaluate v0.0.0-20190409082332-bde2f2afa732/go.mod h1:Ag35kMjauqoVrPXStIe1vKNnO+Cvw2kR2Tef5HH3fxI=
 github.com/helloworldpark/tickle-stock-watcher v0.0.0-20190505100615-fa567c755e68 h1:o+1D4ntkgyz/CNYydV6CmFltMN4RtXc04wu4bFfYIBw=
 github.com/helloworldpark/tickle-stock-watcher v0.0.0-20190505100615-fa567c755e68/go.mod h1:J9MtGx01yn5eHBmkZVUADbpioLiULJkWWBLA7EuxfM8=
+github.com/helloworldpark/tickle-stock-watcher v0.0.0-20190506011053-09767b0f9616 h1:03h4ySxBbX8oOhnl7peO/nE/Yed8kCveZ5Yxk5GpP9A=
+github.com/helloworldpark/tickle-stock-watcher v0.0.0-20190506011053-09767b0f9616/go.mod h1:J9MtGx01yn5eHBmkZVUADbpioLiULJkWWBLA7EuxfM8=
+github.com/helloworldpark/tickle-stock-watcher v0.0.0-20190506074647-820d64cd1720 h1:O5VrKuJypNliUloaWiH4ZNWmtenfBwJIcAebxZHKRPo=
+github.com/helloworldpark/tickle-stock-watcher v0.0.0-20190506074647-820d64cd1720/go.mod h1:J9MtGx01yn5eHBmkZVUADbpioLiULJkWWBLA7EuxfM8=
+github.com/helloworldpark/tickle-stock-watcher v0.0.0-20190506081542-ced48ab98eb4 h1:OUqzL+mFRlRJIkIo36zNUq+FiC639rE7RA1AwLEEckM=
+github.com/helloworldpark/tickle-stock-watcher v0.0.0-20190506081542-ced48ab98eb4/go.mod h1:J9MtGx01yn5eHBmkZVUADbpioLiULJkWWBLA7EuxfM8=
+github.com/helloworldpark/tickle-stock-watcher v0.0.0-20190506083142-0882eca02ab7 h1:DGB90gmvlGk0u9Bc8hXwZOmifr8Sv4WYrV2oEARD+6g=
+github.com/helloworldpark/tickle-stock-watcher v0.0.0-20190506083142-0882eca02ab7/go.mod h1:J9MtGx01yn5eHBmkZVUADbpioLiULJkWWBLA7EuxfM8=
+github.com/helloworldpark/tickle-stock-watcher v0.0.0-20190506093643-33698507d8a4 h1:25HLTch18KE+UuXJS+3CQhPNKH9zkXbD+Xb3Co7L7i4=
+github.com/helloworldpark/tickle-stock-watcher v0.0.0-20190506093643-33698507d8a4/go.mod h1:J9MtGx01yn5eHBmkZVUADbpioLiULJkWWBLA7EuxfM8=
 github.com/hpcloud/tail v1.0.0 h1:nfCOvKYfkgYP8hkirhJocXT2+zOD8yUNjXaWfTlyFKI=
 github.com/hpcloud/tail v1.0.0/go.mod h1:ab1qPbhIpdTxEkNHXyeSf5vhxWSCs/tWer42PpOxQnU=
 github.com/jstemmer/go-junit-report v0.0.0-20190106144839-af01ea7f8024/go.mod h1:6v2b51hI/fHJwM22ozAgKL4VKDeJcHhJFhtBdhmNjmU=

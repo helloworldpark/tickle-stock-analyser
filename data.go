@@ -28,7 +28,7 @@ func CloseDB() {
 }
 
 func CreateWatcher() *watcher.Watcher {
-	crawler := watcher.New(dbClient, 1*time.Second)
+	crawler := watcher.New(dbClient, 500*time.Millisecond)
 	return crawler
 }
 

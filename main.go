@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	maxCrawlingStocks = 10
+	maxCrawlingStocks = 8
 	INVALID           = -1
 	BUY               = 0
 	SELL              = 1
@@ -34,8 +34,7 @@ func main() {
 	InitStorage()
 
 	// 주식 종목들을 모아놓는다
-	// stocks := GetStocks(objective.Markets)
-	stocks := TestStocks()
+	stocks := GetStocks(objective.Markets)
 
 	// Goroutine 시작
 	// 각 종목별로, 가격을 모아놓는다
@@ -74,6 +73,8 @@ func main() {
 		err := Write(report)
 		if err != nil {
 			logger.Error(err.Error())
+		} else {
+			logger.Info("[Writer] Writed report: %d subreports", len(subs))
 		}
 	}()
 	reportSemaphore.Add(1)
@@ -114,12 +115,12 @@ func main() {
 	// Goroutine 종료
 	reportSemaphore.Wait()
 
-	// 모든 종목에 대해 종료되었으면, 이 서버를 삭제하는 API를 날리고 종료한다
-	if runtime.GOOS == "linux" {
-		// 서버를 날리자꾸나
-	} else if runtime.GOOS == "darwin" {
-		logger.Info("Finished Analysing!")
-	}
+	logger.Info("Finished Analysing on %s!", runtime.GOOS)
+	// if runtime.GOOS == "linux" {
+	// 	// 서버를 날리자꾸나
+	// } else if runtime.GOOS == "darwin" {
+
+	// }
 }
 
 func TestStocks() []structs.Stock {
@@ -136,6 +137,7 @@ func TestStocks() []structs.Stock {
 
 func Simulate(stock structs.Stock, strategies [][2]string, prices []structs.StockPrice) []AnalysisSubReport {
 	subReports := make([]AnalysisSubReport, len(strategies))
+	startTimestamp, endTimestamp := prices[0].Timestamp, prices[len(prices)-1].Timestamp
 	for i := range subReports {
 		ana := GetAnalyser(stock.StockID)
 
@@ -177,8 +179,9 @@ func Simulate(stock structs.Stock, strategies [][2]string, prices []structs.Stoc
 			sellStrategy = "price()>=buy*1.04"
 		}
 		strategy := fmt.Sprintf("BUY:%s SELL:%s", strategies[i][0], sellStrategy)
-		subReports[i] = NewSubReport(stock, strategy, trades)
+		subReports[i] = NewSubReport(stock, strategy, trades, startTimestamp, endTimestamp)
 	}
+	logger.Info("[Simulate] Finished %s: %d scenarios", stock.StockID, len(subReports))
 	return subReports
 }
 
