@@ -24,7 +24,7 @@ const (
 func main() {
 	timestampStart := commons.Now().Unix()
 	// 분석할 방법과 대상을 로드
-	objective := ReadAnalysisObjective("/Users/shp/Documents/projects/tickle-stock-analyser/analysisObjective.json")
+	objective := ReadAnalysisObjective("/Users/shp/Documents/projects/tickle-stock-analyser/analysisObjective2.json")
 
 	// DB 초기화
 	InitDB("/Users/shp/Documents/projects/tickle-stock-watcher/credee.json")
@@ -70,11 +70,11 @@ func main() {
 			TimestampEnd:   timestampEnd,
 			Reports:        subs,
 		}
-		err := Write(report)
+		fileName, err := Write(report)
 		if err != nil {
 			logger.Error(err.Error())
 		} else {
-			logger.Info("[Writer] Writed report: %d subreports", len(subs))
+			logger.Info("[Writer] Writed report: %d subreports at %s", len(subs), fileName)
 		}
 	}()
 	reportSemaphore.Add(1)
@@ -176,12 +176,15 @@ func Simulate(stock structs.Stock, strategies [][2]string, prices []structs.Stoc
 
 		sellStrategy := strategies[i][1]
 		if sellStrategy == "" {
-			sellStrategy = "price()>=buy*1.04"
+			sellStrategy = "price()>=buy*1.02"
 		}
 		strategy := fmt.Sprintf("BUY:%s SELL:%s", strategies[i][0], sellStrategy)
+		logger.Info("Strategy: %s", strategy)
 		subReports[i] = NewSubReport(stock, strategy, trades, startTimestamp, endTimestamp)
 	}
-	logger.Info("[Simulate] Finished %s: %d scenarios", stock.StockID, len(subReports))
+	tradeCount0 := len(subReports[0].Trades)
+	tradeCount1 := len(subReports[1].Trades)
+	logger.Info("[Simulate] Finished %s: %d scenarios(0: %d trades, 1: %d trades)", stock.StockID, len(subReports), tradeCount0, tradeCount1)
 	return subReports
 }
 

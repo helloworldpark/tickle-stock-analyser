@@ -82,7 +82,10 @@ func UpdateStrategy(a *analyser.Analyser, stockid string, strategies [2]Strategy
 			}
 		}
 		callback := strategies[j].callback
-		a.AppendStrategy(userStock, f(callback))
+		success, err := a.AppendStrategy(userStock, f(callback))
+		if !success {
+			fmt.Println("[Strategy] ", err)
+		}
 	}
 }
 
