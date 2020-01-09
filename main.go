@@ -164,7 +164,7 @@ func Simulate(stock structs.Stock, strategies [][2]string, prices []structs.Stoc
 		UpdateStrategy(ana, stock.StockID, strategyCallbacks)
 
 		for j := range prices {
-			ana.AppendPastStockPrice(prices[j])
+			ana.AppendPastPrice(prices[j])
 			ana.CalculateStrategies()
 		}
 
