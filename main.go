@@ -70,7 +70,7 @@ func main() {
 			TimestampEnd:   timestampEnd,
 			Reports:        subs,
 		}
-		fileName, err := Write(report)
+		fileName, err := Write(report, runtime.GOOS == "darwin")
 		if err != nil {
 			logger.Error(err.Error())
 		} else {
