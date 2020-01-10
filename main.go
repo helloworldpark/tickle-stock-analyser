@@ -19,6 +19,8 @@ const (
 	INVALID           = -1
 	BUY               = 0
 	SELL              = 1
+
+	minProfit = 1.04
 )
 
 func main() {
@@ -176,7 +178,7 @@ func Simulate(stock structs.Stock, strategies [][2]string, prices []structs.Stoc
 
 		sellStrategy := strategies[i][1]
 		if sellStrategy == "" {
-			sellStrategy = "price()>=buy*1.02"
+			sellStrategy = fmt.Sprintf("price()>=buy*%f", minProfit)
 		}
 		strategy := fmt.Sprintf("BUY:%s SELL:%s", strategies[i][0], sellStrategy)
 		logger.Info("Strategy: %s", strategy)
@@ -238,7 +240,7 @@ func generate4percentCallback(trades *[]Trade, stock structs.Stock, a *analyser.
 			*trades = append(*trades, trade)
 
 			a.DeleteStrategy(0, techan.SELL)
-			persent4 := fmt.Sprintf("price()>=%f", float64(price.Close)*1.04)
+			persent4 := fmt.Sprintf("price()>=%f", float64(price.Close)*minProfit)
 			userStock := structs.UserStock{
 				StockID:   stock.StockID,
 				Strategy:  persent4,
