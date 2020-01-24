@@ -29,7 +29,7 @@ func Write(report interface{}, writeLocal bool) (string, error) {
 	now := commons.Now()
 	y, m, d := now.Date()
 	h, i, s := now.Clock()
-	pureFileName := fmt.Sprintf("Analysis%d%d%d%d%d%d.json", y, m, d, h, i, s)
+	pureFileName := fmt.Sprintf("Analysis%04d%02d%02d%02d%02d%02d.json", y, m, d, h, i, s)
 	filePath := "tickle-stock-analyser/" + pureFileName
 	writer := bucket.Object(filePath).NewWriter(ctx)
 	jsonReport, err := json.Marshal(&report)

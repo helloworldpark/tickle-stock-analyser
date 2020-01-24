@@ -146,23 +146,22 @@ func Simulate(stock structs.Stock, strategies [][2]string, prices []structs.Stoc
 		strategyCallbacks := [2]StrategyCallback{}
 		trades := make([]Trade, 0)
 
-		sc0 := StrategyCallback{}
-		sc0.strategy = strategies[i][0]
+		strategyBuy := StrategyCallback{
+			strategy: strategies[i][0],
+		}
+		strategySell := StrategyCallback{
+			strategy: strategies[i][1],
+		}
 		if strategies[i][1] == "" {
-			sc0.callback = generate4percentCallback(&trades, stock, ana)
+			strategySell.strategy = "price()>=0"
+			strategyBuy.callback = generate4percentCallback(&trades, stock, ana)
 		} else {
-			sc0.callback = generateBaseCallback(&trades)
+			strategyBuy.callback = generateCustomSellCallback(&trades, stock, ana, strategySell.strategy)
 		}
+		strategySell.callback = strategyBuy.callback
 
-		sc1 := StrategyCallback{}
-		sc1.strategy = strategies[i][1]
-		if sc1.strategy == "" {
-			sc1.strategy = "price()>=0"
-		}
-		sc1.callback = sc0.callback
-
-		strategyCallbacks[0] = sc0
-		strategyCallbacks[1] = sc1
+		strategyCallbacks[0] = strategyBuy
+		strategyCallbacks[1] = strategySell
 		UpdateStrategy(ana, stock.StockID, strategyCallbacks)
 
 		for j := range prices {
@@ -181,12 +180,12 @@ func Simulate(stock structs.Stock, strategies [][2]string, prices []structs.Stoc
 			sellStrategy = fmt.Sprintf("price()>=buy*%f", minProfit)
 		}
 		strategy := fmt.Sprintf("BUY:%s SELL:%s", strategies[i][0], sellStrategy)
-		logger.Info("Strategy: %s", strategy)
+		// logger.Info("Strategy: %s", strategy)
 		subReports[i] = NewSubReport(stock, strategy, trades, startTimestamp, endTimestamp)
 	}
-	tradeCount0 := len(subReports[0].Trades)
-	tradeCount1 := len(subReports[1].Trades)
-	logger.Info("[Simulate] Finished %s: %d scenarios(0: %d trades, 1: %d trades)", stock.StockID, len(subReports), tradeCount0, tradeCount1)
+	// tradeCount0 := len(subReports[0].Trades)
+	// tradeCount1 := len(subReports[1].Trades)
+	// logger.Info("[Simulate] Finished %s: %d scenarios(0: %d trades, 1: %d trades)", stock.StockID, len(subReports), tradeCount0, tradeCount1)
 	return subReports
 }
 
@@ -244,6 +243,46 @@ func generate4percentCallback(trades *[]Trade, stock structs.Stock, a *analyser.
 			userStock := structs.UserStock{
 				StockID:   stock.StockID,
 				Strategy:  persent4,
+				OrderSide: 1,
+			}
+			a.AppendStrategy(userStock, func(price structs.StockPrice, orderSide int, _ int64, _ bool) {
+				callback(price, orderSide)
+			})
+		} else if lastSide == SELL {
+			trade := (*trades)[len(*trades)-1]
+			trade.Sell = price
+			(*trades)[len(*trades)-1] = trade
+
+			a.DeleteStrategy(0, techan.SELL)
+		}
+	}
+	return callback
+}
+
+func generateCustomSellCallback(trades *[]Trade, stock structs.Stock, a *analyser.Analyser, sellStrategy string) func(structs.StockPrice, int) {
+	lastSide := INVALID
+	var callback func(price structs.StockPrice, orderSide int)
+	callback = func(price structs.StockPrice, orderSide int) {
+		if lastSide == INVALID {
+			if orderSide == SELL {
+				return
+			}
+			lastSide = orderSide
+		} else {
+			if lastSide == orderSide {
+				return
+			}
+			lastSide = orderSide
+		}
+		if lastSide == BUY {
+			trade := Trade{}
+			trade.Buy = price
+			*trades = append(*trades, trade)
+
+			a.DeleteStrategy(0, techan.SELL)
+			userStock := structs.UserStock{
+				StockID:   stock.StockID,
+				Strategy:  sellStrategy,
 				OrderSide: 1,
 			}
 			a.AppendStrategy(userStock, func(price structs.StockPrice, orderSide int, _ int64, _ bool) {
